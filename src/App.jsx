@@ -1,14 +1,36 @@
 import { useState } from 'react';
-import './App.css';
 import { Button, Nav, Navbar, Container } from 'react-bootstrap'; // 부트스트랩에서 각 컴포넌트 import해야 함
+import { Routes, Route, Link, useNavigate } from 'react-router-dom' // 라우터 관련 컴포넌트, 함수 import
+import axios from 'axios'; // ajax GET 요청을 위한 axios 컴포넌트 import
+
+import './App.css';
 import bgImg from './assets/bg-1.png'; // 이미지 경로 설정
-import { data } from './data.js';
-import { Routes, Route, Link, useNavigate, Outlet } from 'react-router-dom' // 라우터 관련 컴포넌트 import
+import data from './data.js';
+
+// 페이지들을 컴포넌트로 만들고 각각 파일로 관리
+import EventPage from './routes/Event.jsx';
+import AboutPage from './routes/About.jsx';
+import DetailPage from './routes/Detail.jsx';
 
 function App() {
-
   let [shoes, setShoes] = useState(data);
   let navigate = useNavigate();
+
+  function AddCard(data) {
+    let temp = shoes;
+    let changed = false
+
+    data.data.forEach((a) => {
+      let inter = temp.find((x) => { return x.id == a.id });
+      if (inter == undefined) {
+        temp.push(a);
+        changed = true;
+      }
+    });
+
+    //setState할 때 배열, 오브젝트는 꼭 비구조화할 것...!
+    if (changed) setShoes([...temp]);
+  }
 
   return (
     // bootstrap 사용하는 법 (index.html 파일에 link 추가해야 됨)
@@ -33,8 +55,11 @@ function App() {
       <Routes>
         {/* Route 태그로 경로 지정하고 element에 html 내용 입력 */}
         {/* element 외부에 적힌 내용들은 모든 페이지에 포함됨 */}
-        <Route path='/' element={<MainPage shoes={shoes} />} />
-        <Route path="/detail" element={<DetailPage />} />
+        <Route path='/' element={<MainPage shoes={shoes} AddCard={AddCard} />} />
+
+        {/* URL 파라미터 */}
+        {/* 콜른(:) 이후에 URL 파라미터 작명하여 사용 (여러개 사용 가능) */}
+        <Route path="/detail/:id" element={<DetailPage shoes={shoes} />} />
 
         {/* Nested Route */}
         <Route path='/about' element={<AboutPage />}>
@@ -61,14 +86,14 @@ function App() {
 }
 
 function MainPage(props) {
+  let [load, setLoad] = useState(false)
+  let [get_cnt, setGet_cnt] = useState(2);
   return (
     <>
       {/* 이미지 첨부하는 법 */}
       <div className='main-bg' style={{ backgroundImage: `url(${bgImg})` }}></div>
       {/* public 폴더에 있는 이미지 첨부에 대해서는 아래와 같이 입력 */}
       {/* <div className='main-bg' style={{backgroundImage : `url(${process.env.PUBLIC_URL + '/bg-1.png'})`}}></div> */}
-
-
 
       <div className='Container'>
         <div className='row' style={{ width: '100%' }}>
@@ -79,49 +104,26 @@ function MainPage(props) {
           }
         </div>
       </div>
+      {load ? <div className="alert alert-warning">로딩 중</div> : null}
+      <button onClick={() => {
+        setLoad(true); // 로딩 UI
+        //(setTimeout은 서버요청 시간 임의 구현)
+        setTimeout(() => {
+          //axios 컴포넌트로 ajax get요청~ 
+          axios.get(`https://codingapple1.github.io/shop/data${get_cnt}.json`)
+            .then((data) => {
+              props.AddCard(data);
+              setGet_cnt(get_cnt + 1);
+              setLoad(false);
+            })
+            .catch(() => { console.log('failed'); setLoad(false) })
+        }, 500);
+        
+        // 그 외 ajax 요청
+        // ajax post 요청: axios.post('경로', {name:'kim'});
+        // 여러 개의 ajax 요청 동시 처리: Promise.all([axios.get('경로1'), axios.get('경로2')]).then(() => { '실행할 코드' })
+      }}>버튼</button >
     </>
-  );
-}
-
-function DetailPage() {
-  return (
-    <div className="container">
-      <div className="row">
-        <div className="col-md-6">
-          <img src="https://codingapple1.github.io/shop/shoes1.jpg" width="100%" />
-        </div>
-        <div className="col-md-6">
-          <h4 className="pt-5">상품명</h4>
-          <p>상품설명</p>
-          <p>120000원</p>
-          <button className="btn btn-danger">주문하기</button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function AboutPage() {
-  return (
-    <div>
-      <h4>회사정보임</h4>
-
-      {/* 이 위치에 하위 페이지 내용 채워짐 */}
-      <Outlet></Outlet>
-
-    </div>
-  );
-}
-
-function EventPage() {
-  return (
-    <div>
-      <h4>오늘의 이벤트</h4>
-
-      {/* 이 위치에 하위 페이지 내용 채워짐 */}
-      <Outlet></Outlet>
-
-    </div>
   );
 }
 
