@@ -2,6 +2,8 @@ import { useParams } from "react-router-dom"; // URL 파라미터 관련 함수 
 import styled from 'styled-components'; // styled-components 관련 컴포넌트 import
 import { useEffect, useState } from "react"; // useEffect import
 import { Nav } from "react-bootstrap";
+import { addItem } from "../store/itemSlice";
+import { useDispatch } from "react-redux";
 
 // styeld로 css 작성 없이 스타일 입력 가능 (변수 작명 시 첫 문자는 대문자로)
 // props 문법 사용 가능 (아래와 같이 'props =>'로 시작하며 사용)
@@ -23,6 +25,8 @@ function DetailPage(props) {
   let [load, setLoad] = useState('');
   //let [input, SetInput] = useState('');
   //let [temp, SetTemp] = useState(false);
+
+  const dispatch = useDispatch();
 
   // useEffect: 해당 컴포넌트가 mount, update 시 실행 콜백함수 실행
   useEffect(() => {
@@ -50,7 +54,7 @@ function DetailPage(props) {
   // URL 파라미터 정보를 위한 함수 useParams
   // 작명한 URL 파라미터를 이름 그대로 사용
   let { id } = useParams();
-  let product = props.shoes.find((x) => { return x.id == id });
+  let product = props.shoes.find((x) => { return x.id == id });  
 
   if (product != undefined)
     return (
@@ -71,7 +75,9 @@ function DetailPage(props) {
             <h4 className="pt-5">{product.title}</h4>
             <p>{product.content}</p>
             <p>{product.price}</p>
-            <button className="btn btn-danger">주문하기</button>
+            <button className="btn btn-danger" onClick={()=>{
+              dispatch(addItem(product));
+            }}>주문하기</button>
           </div>
         </div>
 
@@ -87,7 +93,7 @@ function DetailPage(props) {
             <Nav.Link eventKey="link2" onClick={() => setTab(2)}>배송</Nav.Link>
           </Nav.Item>
         </Nav>
-        <TabContent tab={tab} shoes={props.shoes} />
+        <TabContent tab={tab} product={product} />
       </div>
     );
   return (
@@ -119,7 +125,7 @@ function TabContent(props) {
     // 전체를 하나의 div 태그로 묶어 스타일을 주기 용이하게 한다.
     // fade in 애니메이션 start: opacity:0, end: opacity 1, transition: 0.5s (App.css 참고)
     <div className={`start ${fade}`}>
-      {[<div>상세설명{props.shoes[0].title}</div>,<div>리뷰</div>,<div>배송</div>][props.tab]}
+      {[<div>상세설명{props.product.title}</div>,<div>리뷰</div>,<div>배송</div>][props.tab]}
     </div>
   );
 }

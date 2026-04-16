@@ -11,9 +11,12 @@ import data from './data.js';
 import EventPage from './routes/Event.jsx';
 import AboutPage from './routes/About.jsx';
 import DetailPage from './routes/Detail.jsx';
+import CartPage from './routes/Cart.jsx';
 
 function App() {
   let [shoes, setShoes] = useState(data);
+
+  // navigate는 변수에 저장하여 사용
   let navigate = useNavigate();
 
   function AddCard(data) {
@@ -38,17 +41,20 @@ function App() {
       <Navbar bg="dark" data-bs-theme="dark" style={{ paddingLeft: '20px' }}>
         <Navbar.Brand href="#home">안녕안녕신발가게</Navbar.Brand>
         <Nav className="me-auto">
-          <Nav.Link href="/">Home</Nav.Link>
-          <Nav.Link href="#features">Cart</Nav.Link>
-          {/* navigater 사용해서 아래와 같이 사용 가능 */}
+          {/* 아래처럼 사용해도 되지만 링크 타고 이동 시 state(redux의 slice)가 초기값으로 초기화 됨 */}
+          {/* <Nav.Link href="/">Home</Nav.Link> */}
+
+          {/* 링크 태그로 페이지 이동 버튼 만들기 (디자인 구려서 안쓰고 navifate 함수 이용) */}
+          {/* <Link to="/">홈</Link> */}
+          {/* <Link to="/detail">상세페이지</Link> */}
+
+          {/* 따라서 navigater 사용해서 아래와 같이 사용 */}
           {/* 물론 Nav.Link 컴포넌트에는 필요 없지만 다른 컴포넌트에 적용 가능 */}
           {/* navigate(-1), navigate(1) 이런 식으로 숫자를 전달하면 이전 이후 페이지로 이동 */}
-          <Nav.Link onClick={() => navigate('/detail')}>Detail</Nav.Link>
-
+          <Nav.Link onClick={() => navigate('/')}>Home</Nav.Link>
+          <Nav.Link onClick={() => navigate('/cart')}>Cart</Nav.Link>
+          <Nav.Link onClick={() => navigate('/detail/0')}>Detail</Nav.Link>
         </Nav>
-        {/* 링크 태그로 페이지 이동 버튼 만들기 */}
-        {/* <Link to="/">홈</Link> */}
-        {/* <Link to="/detail">상세페이지</Link> */}
       </Navbar>
 
       {/* 라우터로 페이지 나누는 법 */}
@@ -60,6 +66,8 @@ function App() {
         {/* URL 파라미터 */}
         {/* 콜른(:) 이후에 URL 파라미터 작명하여 사용 (여러개 사용 가능) */}
         <Route path="/detail/:id" element={<DetailPage shoes={shoes} />} />
+
+        <Route path='/cart' element={<CartPage />} />
 
         {/* Nested Route */}
         <Route path='/about' element={<AboutPage />}>
@@ -118,7 +126,7 @@ function MainPage(props) {
             })
             .catch(() => { console.log('failed'); setLoad(false) })
         }, 500);
-        
+
         // 그 외 ajax 요청
         // ajax post 요청: axios.post('경로', {name:'kim'});
         // 여러 개의 ajax 요청 동시 처리: Promise.all([axios.get('경로1'), axios.get('경로2')]).then(() => { '실행할 코드' })
