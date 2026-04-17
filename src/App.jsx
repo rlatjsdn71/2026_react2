@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { Button, Nav, Navbar, Container } from 'react-bootstrap'; // 부트스트랩에서 각 컴포넌트 import해야 함
+import { useEffect, useState } from 'react';
+import { Button, Nav, Navbar, NavDropdown, Container } from 'react-bootstrap'; // 부트스트랩에서 각 컴포넌트 import해야 함
 import { Routes, Route, Link, useNavigate } from 'react-router-dom' // 라우터 관련 컴포넌트, 함수 import
 import axios from 'axios'; // ajax GET 요청을 위한 axios 컴포넌트 import
+import { useQuery, useQueryClient } from '@tanstack/react-query'; // Tanstack Query 사용을 위해 관련 컴포넌트, 함수 import
 
 import './App.css';
 import bgImg from './assets/bg-1.png'; // 이미지 경로 설정
@@ -18,6 +19,37 @@ function App() {
 
   // navigate는 변수에 저장하여 사용
   let navigate = useNavigate();
+
+  // Tastack Query 사용법 (get요청 예시)
+  /*
+  let result = useQuery({
+    queryKey: ['getName'], // 작명은 자유롭게
+    refetchOnWindowFocus: false, // 페이지 복귀 시 요청을 제어할 수 있음(false 시에는 요청 안해줌)
+    retry: 3, // 요청 실패시 재시도 횟수 설정 가능
+    queryFn: () => {
+      // 함수에서 ajax 요청 함수를 return
+      return axios.get('https://codingapple1.github.io/userdata.json')
+        .then((x) => { return x.data })
+    }
+  });*/
+  // 결과는 오브젝트 타입 변수에 저장되고, success, pendding, error 등 상태를 나타내는 요소가 포함되어 있음
+  // 데이터는 .data에 저장된다.
+  // console.log(result.data);
+
+  // 다른 페이지에서 따로 요청을 하지 않고 이미 캐싱된 데이터를 불러올 수 있음
+  // let q = useQueryClient(); // 변수에 useQueryClient 지정
+  // let temp = q.getQueryData(['getName']); // QueryClient에 쿼리키를 전달하여 캐싱된 데이터를 불러오기
+  // console.log(temp); // 데이터가 전달된다. (success 등과 같은 상태요소 없고 데이터만 전달됨)
+
+  // localStorage 사용하기~
+  // let obj = {name:'kim'};
+  // localStorage.setItem('data', JSON.stringify(obj));
+  // console.log(JSON.parse(localStorage.getItem('data')));
+
+  useEffect(() => {
+    localStorage.setItem('watched', JSON.stringify([]));
+    sessionStorage.setItem('detail_num', '0');
+  }, []);
 
   function AddCard(data) {
     let temp = shoes;
@@ -51,9 +83,18 @@ function App() {
           {/* 따라서 navigater 사용해서 아래와 같이 사용 */}
           {/* 물론 Nav.Link 컴포넌트에는 필요 없지만 다른 컴포넌트에 적용 가능 */}
           {/* navigate(-1), navigate(1) 이런 식으로 숫자를 전달하면 이전 이후 페이지로 이동 */}
-          <Nav.Link onClick={() => navigate('/')}>Home</Nav.Link>
+          <Nav.Link onClick={() => { return navigate('/') }}>Home</Nav.Link>
+          {/* 아래는 {return } 생략 */}
           <Nav.Link onClick={() => navigate('/cart')}>Cart</Nav.Link>
-          <Nav.Link onClick={() => navigate('/detail/0')}>Detail</Nav.Link>
+          <Nav.Link onClick={() => navigate(`/detail/${sessionStorage.getItem('detail_num')}`)}>Detail</Nav.Link>
+
+          {/* 최근 본 상품 UI 만들어 보기 */}
+          <WatchedItem shoes={shoes}/>
+          {/* <NavDropdown title="최근 본 상품">
+            <NavDropdown.Item href="#action/3.1">Action</NavDropdown.Item>
+            <NavDropdown.Item href="#action/3.2">Another action</NavDropdown.Item>
+            <NavDropdown.Item href="#action/3.3">Something</NavDropdown.Item>
+          </NavDropdown> */}
         </Nav>
       </Navbar>
 
@@ -143,6 +184,22 @@ function ShoesCard(props) {
       <p>{props.shoes.content}</p>
       <p>{props.shoes.price}</p>
     </div>
+  );
+}
+
+function WatchedItem(props) {
+  let navigate = useNavigate();
+  let shoes = props.shoes
+  let watched = JSON.parse(localStorage.getItem('watched'));
+
+  if(watched.length == 0)
+    return null;
+  
+  return (
+    <NavDropdown title="최근 본 상품">
+      {watched.map((a,i)=>{
+        return <NavDropdown.Item key = {i} onClick={()=>{navigate(`/detail/${i}`)}}>{shoes[i].title}</NavDropdown.Item>})}
+    </NavDropdown>
   );
 }
 

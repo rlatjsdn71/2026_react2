@@ -51,12 +51,28 @@ function DetailPage(props) {
     setLoad('end');
   }, []);
 
+  useEffect(() => {
+    return () => { sessionStorage.setItem('detail_num', 0) }
+  }, [])
+
   // URL 파라미터 정보를 위한 함수 useParams
   // 작명한 URL 파라미터를 이름 그대로 사용
   let { id } = useParams();
-  let product = props.shoes.find((x) => { return x.id == id });  
+  let product = props.shoes.find((x) => { return x.id == id });
 
-  if (product != undefined)
+  if (product != undefined) {
+
+    // watched에 내가 본 디테일 페이지 저장 (temp 쓸 일 있을 수 있어서 중괄호로 묶음~)
+    {
+      let temp = JSON.parse(localStorage.getItem('watched'));
+      temp[product.id] = 1;
+      localStorage.setItem('watched', JSON.stringify(temp))
+    }
+
+    // detail 페이지에서 detail 링크 누르면 다음 상품 보여주기
+    if (product.id + 1 == props.shoes.length) sessionStorage.setItem('detail_num', 0);
+    else sessionStorage.setItem('detail_num', product.id + 1);
+
     return (
       <div className={`container start ${load}`}>
         {/* <Btn bg="blue"> 버튼</Btn>
@@ -75,7 +91,7 @@ function DetailPage(props) {
             <h4 className="pt-5">{product.title}</h4>
             <p>{product.content}</p>
             <p>{product.price}</p>
-            <button className="btn btn-danger" onClick={()=>{
+            <button className="btn btn-danger" onClick={() => {
               dispatch(addItem(product));
             }}>주문하기</button>
           </div>
@@ -96,6 +112,8 @@ function DetailPage(props) {
         <TabContent tab={tab} product={product} />
       </div>
     );
+  }
+  sessionStorage.setItem('detail_num', '0');
   return (
     <div>존재하지 않는 상품입니다.</div>
   );
@@ -112,20 +130,20 @@ function TabContent(props) {
   // 2. useEffect return문에서 먼저 fade를 공백으로 초기화
   // 3. 이후 useEffect 본문에서 fade를 end로 초기화
   // 결과: classname에 end(스타일)가 없어졌다가 다시 붙으면서 opacity가 변함 => transition으로 애니메이션
-  useEffect(()=>{
+  useEffect(() => {
     // react에서는 실행 상 붙어있는 setState는 최근 명령 하나만 수행하기 때문에 timeout으로 분리
-    let a = setTimeout(()=>{setFade('end')},100);
-    return () =>{
+    let a = setTimeout(() => { setFade('end') }, 100);
+    return () => {
       setFade('');
       clearTimeout(a);
     };
   }, [props.tab]);
-  return ( 
+  return (
     // 조건제어문 대신 깔끔하게 배열의 요소를 return 하는 방식
     // 전체를 하나의 div 태그로 묶어 스타일을 주기 용이하게 한다.
     // fade in 애니메이션 start: opacity:0, end: opacity 1, transition: 0.5s (App.css 참고)
     <div className={`start ${fade}`}>
-      {[<div>상세설명{props.product.title}</div>,<div>리뷰</div>,<div>배송</div>][props.tab]}
+      {[<div>상세설명{props.product.title}</div>, <div>리뷰</div>, <div>배송</div>][props.tab]}
     </div>
   );
 }
