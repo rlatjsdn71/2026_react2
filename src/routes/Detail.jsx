@@ -20,13 +20,17 @@ let TempBtn = styled(Btn)`
 `;
 
 function DetailPage(props) {
+  let [render, Rerender] = useState(0); // 그냥 리렌더 용 스테이트
+
   let [alert, SetAlert] = useState(5);
   let [tab, setTab] = useState(0);
   let [load, setLoad] = useState('');
-  //let [input, SetInput] = useState('');
-  //let [temp, SetTemp] = useState(false);
 
   const dispatch = useDispatch();
+
+  // 이하 예시용 state
+  //let [input, SetInput] = useState('');
+  //let [temp, SetTemp] = useState(false);
 
   // useEffect: 해당 컴포넌트가 mount, update 시 실행 콜백함수 실행
   useEffect(() => {
@@ -65,8 +69,11 @@ function DetailPage(props) {
     // watched에 내가 본 디테일 페이지 저장 (temp 쓸 일 있을 수 있어서 중괄호로 묶음~)
     {
       let temp = JSON.parse(localStorage.getItem('watched'));
-      temp[product.id] = 1;
-      localStorage.setItem('watched', JSON.stringify(temp))
+      if(temp[product.id] == undefined){
+        temp[product.id] = 1;
+        localStorage.setItem('watched', JSON.stringify(temp))
+        //Rerender(render + 1);
+      }
     }
 
     // detail 페이지에서 detail 링크 누르면 다음 상품 보여주기
@@ -75,7 +82,8 @@ function DetailPage(props) {
 
     return (
       <div className={`container start ${load}`}>
-        {/* <Btn bg="blue"> 버튼</Btn>
+        {/* styled-component 예시
+        <Btn bg="blue"> 버튼</Btn>
         <Btn bg="yellow"> 버튼</Btn>
         <Btn bg="green"> 버튼</Btn>
         <TempBtn bg="red">버튼</TempBtn> */}
@@ -84,8 +92,11 @@ function DetailPage(props) {
         <div className="row">
           <div className="col-md-6">
             <img src={`https://codingapple1.github.io/shop/shoes${product.id + 1}.jpg`} width="100%" />
-            {/*uesEffect 예시 temp ? <div className="alert alert-warning">숫자만 입력하세요</div> : null*/}
-            {/* <input type="text" placeholder='입력' onChange={(e) => { SetInput(e.target.value); }} /> */}
+
+            {/* useEffect 예시
+            temp ? <div className="alert alert-warning">숫자만 입력하세요</div> : null
+            <input type="text" placeholder='입력' onChange={(e) => { SetInput(e.target.value); }} /> */}
+
           </div>
           <div className="col-md-6">
             <h4 className="pt-5">{product.title}</h4>
@@ -113,6 +124,8 @@ function DetailPage(props) {
       </div>
     );
   }
+
+  // 상품 번호 없으면 초기화
   sessionStorage.setItem('detail_num', '0');
   return (
     <div>존재하지 않는 상품입니다.</div>
@@ -131,7 +144,7 @@ function TabContent(props) {
   // 3. 이후 useEffect 본문에서 fade를 end로 초기화
   // 결과: classname에 end(스타일)가 없어졌다가 다시 붙으면서 opacity가 변함 => transition으로 애니메이션
   useEffect(() => {
-    // react에서는 실행 상 붙어있는 setState는 최근 명령 하나만 수행하기 때문에 timeout으로 분리
+    // react에서는 실행 상 붙어있는 state 변경에 대해 마지막 state 변경의 경우에만 재렌더링을 하기 때문에 timeout으로 분리
     let a = setTimeout(() => { setFade('end') }, 100);
     return () => {
       setFade('');

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Button, Nav, Navbar, NavDropdown, Container } from 'react-bootstrap'; // 부트스트랩에서 각 컴포넌트 import해야 함
 import { Routes, Route, Link, useNavigate } from 'react-router-dom' // 라우터 관련 컴포넌트, 함수 import
 import axios from 'axios'; // ajax GET 요청을 위한 axios 컴포넌트 import
@@ -11,17 +11,27 @@ import data from './data.js';
 // 페이지들을 컴포넌트로 만들고 각각 파일로 관리
 import EventPage from './routes/Event.jsx';
 import AboutPage from './routes/About.jsx';
-import DetailPage from './routes/Detail.jsx';
-import CartPage from './routes/Cart.jsx';
+import TestPage from './routes/Test.jsx';
+
+// Lazy import
+// 원래 import 문법
+//import DetailPage from './routes/Detail.jsx';
+//import CartPage from './routes/Cart.jsx';
+// 컴포넌트 파일을 바로 불러오는게 아닌 필요할 때(호출했을 때) 불러오도록 하는 기능
+// build를 해서 사이트를 발행할 때에도 하나의 JS 파일이 아닌 별도의 파일로 발행된다.
+const DetailPage = lazy(() => { return import('./routes/Detail.jsx') });
+// 중괄호 return 생략
+const CartPage = lazy(() => import('./routes/Cart.jsx'));
 
 function App() {
+  let [render, Rerender] = useState(0); // 그냥 리렌더 용 스테이트
+
   let [shoes, setShoes] = useState(data);
 
   // navigate는 변수에 저장하여 사용
   let navigate = useNavigate();
 
-  // Tastack Query 사용법 (get요청 예시)
-  /*
+  /* Tastack Query 사용법 (get요청 예시)
   let result = useQuery({
     queryKey: ['getName'], // 작명은 자유롭게
     refetchOnWindowFocus: false, // 페이지 복귀 시 요청을 제어할 수 있음(false 시에는 요청 안해줌)
@@ -31,24 +41,29 @@ function App() {
       return axios.get('https://codingapple1.github.io/userdata.json')
         .then((x) => { return x.data })
     }
-  });*/
-  // 결과는 오브젝트 타입 변수에 저장되고, success, pendding, error 등 상태를 나타내는 요소가 포함되어 있음
-  // 데이터는 .data에 저장된다.
-  // console.log(result.data);
+  });
+   결과는 오브젝트 타입 변수에 저장되고, success, pendding, error 등 상태를 나타내는 요소가 포함되어 있음
+   데이터는 .data에 저장된다.
+  console.log(result.data); */
 
-  // 다른 페이지에서 따로 요청을 하지 않고 이미 캐싱된 데이터를 불러올 수 있음
-  // let q = useQueryClient(); // 변수에 useQueryClient 지정
-  // let temp = q.getQueryData(['getName']); // QueryClient에 쿼리키를 전달하여 캐싱된 데이터를 불러오기
-  // console.log(temp); // 데이터가 전달된다. (success 등과 같은 상태요소 없고 데이터만 전달됨)
+  /* 다른 페이지에서 따로 요청을 하지 않고 이미 캐싱된 데이터를 불러올 수 있음
+  let q = useQueryClient(); // 변수에 useQueryClient 지정
+  let temp = q.getQueryData(['getName']); // QueryClient에 쿼리키를 전달하여 캐싱된 데이터를 불러오기
+  console.log(temp); // 데이터가 전달된다. (success 등과 같은 상태요소 없고 데이터만 전달됨)
+  */
 
-  // localStorage 사용하기~
-  // let obj = {name:'kim'};
-  // localStorage.setItem('data', JSON.stringify(obj));
-  // console.log(JSON.parse(localStorage.getItem('data')));
+  /* localStorage 사용 예시~
+   let obj = {name:'kim'};
+   localStorage.setItem('data', JSON.stringify(obj));
+   console.log(JSON.parse(localStorage.getItem('data')));*/
 
   useEffect(() => {
-    localStorage.setItem('watched', JSON.stringify([]));
-    sessionStorage.setItem('detail_num', '0');
+    let temp = JSON.parse(localStorage.getItem('watched'));
+    if (temp == null)
+      localStorage.setItem('watched', JSON.stringify([]));
+    temp = JSON.parse(sessionStorage.getItem('detail_num'));
+    if (temp == null)
+      sessionStorage.setItem('detail_num', '0');
   }, []);
 
   function AddCard(data) {
@@ -89,26 +104,43 @@ function App() {
           <Nav.Link onClick={() => navigate(`/detail/${sessionStorage.getItem('detail_num')}`)}>Detail</Nav.Link>
 
           {/* 최근 본 상품 UI 만들어 보기 */}
-          <WatchedItem shoes={shoes}/>
-          {/* <NavDropdown title="최근 본 상품">
-            <NavDropdown.Item href="#action/3.1">Action</NavDropdown.Item>
-            <NavDropdown.Item href="#action/3.2">Another action</NavDropdown.Item>
-            <NavDropdown.Item href="#action/3.3">Something</NavDropdown.Item>
-          </NavDropdown> */}
-        </Nav>
-      </Navbar>
+          <WatchedItem shoes={shoes} />
+
+          {/* 초기화 버튼 */}
+          <Nav.Link onClick={() => {
+            localStorage.setItem('watched', JSON.stringify([]));
+            sessionStorage.setItem('detail_num', '0');
+            Rerender(render + 1); // 리렌더링
+          }}>초기화</Nav.Link>
+
+          <Nav.Link onClick={() => { return navigate('/test') }}>Test</Nav.Link>
+        </Nav >
+      </Navbar >
 
       {/* 라우터로 페이지 나누는 법 */}
-      <Routes>
+      < Routes >
         {/* Route 태그로 경로 지정하고 element에 html 내용 입력 */}
         {/* element 외부에 적힌 내용들은 모든 페이지에 포함됨 */}
         <Route path='/' element={<MainPage shoes={shoes} AddCard={AddCard} />} />
 
         {/* URL 파라미터 */}
         {/* 콜른(:) 이후에 URL 파라미터 작명하여 사용 (여러개 사용 가능) */}
-        <Route path="/detail/:id" element={<DetailPage shoes={shoes} />} />
+        <Route path="/detail/:id" element={
+          <Suspense fallback={<div>로딩중~</div>}>
+            <DetailPage shoes={shoes} />
+          </Suspense>
+        } />
 
-        <Route path='/cart' element={<CartPage />} />
+        <Route path='/cart' element={
+          /*
+          lazy import한 컴포넌트의 경우 불러오는데 시간이 걸릴 수 있기 때문에
+          해당 컴포넌트 태그를 Suspense 태그로 감싸 로딩 화면 등을 출력해 줄 수 있다
+          Suspense 태그에 fallback 속성에 컴포넌트를 불러오는 동안 띄우고 싶은 html 요소 입력
+          */
+          <Suspense fallback={<div>로딩중~</div>}>
+            <CartPage />
+          </Suspense>
+        } />
 
         {/* Nested Route */}
         <Route path='/about' element={<AboutPage />}>
@@ -127,10 +159,13 @@ function App() {
           <Route path='two' element={<div>생일 기념 쿠폰</div>} />
         </Route>
 
+        {/* 테스트 페이징 */}
+        <Route path='test' element={<TestPage />} />
+
         {/* 404페이지(없는 페이지) 처리 */}
         <Route path='*' element={<div>없는 페이지입니다.</div>} />
-      </Routes>
-    </div>
+      </Routes >
+    </div >
   )
 }
 
@@ -168,9 +203,9 @@ function MainPage(props) {
             .catch(() => { console.log('failed'); setLoad(false) })
         }, 500);
 
-        // 그 외 ajax 요청
-        // ajax post 요청: axios.post('경로', {name:'kim'});
-        // 여러 개의 ajax 요청 동시 처리: Promise.all([axios.get('경로1'), axios.get('경로2')]).then(() => { '실행할 코드' })
+        /* 그 외 ajax 요청
+         ajax post 요청: axios.post('경로', {name:'kim'});
+         여러 개의 ajax 요청 동시 처리: Promise.all([axios.get('경로1'), axios.get('경로2')]).then(() => { '실행할 코드' })*/
       }}>버튼</button >
     </>
   );
@@ -192,13 +227,16 @@ function WatchedItem(props) {
   let shoes = props.shoes
   let watched = JSON.parse(localStorage.getItem('watched'));
 
-  if(watched.length == 0)
+  if (watched.length == 0)
     return null;
-  
+
   return (
     <NavDropdown title="최근 본 상품">
-      {watched.map((a,i)=>{
-        return <NavDropdown.Item key = {i} onClick={()=>{navigate(`/detail/${i}`)}}>{shoes[i].title}</NavDropdown.Item>})}
+      {watched.map((a, i) => {
+        // 상품이 없으면 출력 안함(새로고침 한 경우 ajax로 불러온 상품은 없어지기 때문에)
+        if (shoes[i] == undefined) return null
+        return <NavDropdown.Item key={i} onClick={() => { navigate(`/detail/${i}`) }}>{shoes[i].title}</NavDropdown.Item>
+      })}
     </NavDropdown>
   );
 }

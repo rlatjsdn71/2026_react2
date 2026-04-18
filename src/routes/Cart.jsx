@@ -2,9 +2,18 @@ import { Table } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import { setjohn, increaseStock, increaseStockItem } from "./../store.js"; // store 파일에서 정의한 변경 함수들을 import
 import { increaseItem } from "../store/itemSlice.js";
+import { memo, useMemo, useState } from "react";
+
+// memo: 컴포넌트의 무분별한 재렌더를 방지하는 함수
+// 컴포넌트에 전해지는 props의 값이 변할 때에만 재렌더해준다.
+// 다음과 같이 사용
+let Child = memo(function () {
+    console.log('재렌더');
+
+    return <div>자식</div>
+});
 
 function CartPage() {
-
     // store에 있는 모든 state(slice)를 불러오기 위해 useSelector 함수 사용
     // 변수에 저장해서 사용한다.
     let state = useSelector((state) => { return state }) // state는 store에 저장된 모든 state를 포함하는 오브젝트
@@ -15,9 +24,21 @@ function CartPage() {
     const dispatch = useDispatch();
     // dispatch(setjohn()) // 이런식으로 사용
 
+    let [render, Rerender] = useState(0); // 렌더링 용 state
+
+    // useMemo: 해당 함수를 첫 마운트 시 한 번만 실행하게 해준다.
+    // 뒤 배열에 state를 포함시키면 해당 state가 변할 때에도 실행시켜줌
+    // 아래와 같이 사용
+    let result = useMemo(() => { return /*복잡하고어려운함수()*/ }, [/*state*/]);
+
     return (
         <div>
-            {/* 예시 {state.stock}
+            {/* memo 예시
+            <Child></Child>
+            <button onClick={() => { Rerender(render + 1) }}>재렌더링</button> */}
+
+            {/* redux 예시
+            {state.stock}
             <button onClick={() => { dispatch(increaseStock()) }}> 버튼 </button>
             <div>
                 <button onClick={() => { dispatch(increaseStockItem(0)) }}> 버튼1 </button>
