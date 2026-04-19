@@ -227,8 +227,8 @@ function WatchedItem(props) {
   let shoes = props.shoes
   let watched = JSON.parse(localStorage.getItem('watched'));
 
-  if (watched.length == 0)
-    return null;
+  if (watched == null) return null;
+  if (watched.length == 0) return null;
 
   return (
     <NavDropdown title="최근 본 상품">
